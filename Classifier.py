@@ -1,6 +1,8 @@
 __author__ = 'alighahramani'
 from sklearn.ensemble import RandomForestClassifier as RF
 import math
+import csv
+import collections
 
 class RandomForest :
 
@@ -19,11 +21,29 @@ class RandomForest :
 
 
 
+from SystemEvents.Text_Suite import attribute_run
+from sklearn.externals import joblib
+import mlUtil
+import math
+import argparse
+
+#helper method & sample solution for ZeroR fit method
+def zeroR(data):
+    '''
+        Given a list or sklearn-style dictionary, return the most common value
+        '''
+    if type(data) == dict:
+        y_vals = data['target']
+    else:
+        y_vals = data
+    return collections.Counter(y_vals).most_common()[0][0]
+
+
 class DecisionTree():
     '''
         Sklearn-style decision tree classifier, using entropy
         '''
-    def __init__(self, attrib_d=None, attribs=None,default_v=None, depth = 1):
+    def __init__(self, attrib_d=None, attribs=None,default_v=None , length = 1):
         ''' initialize classifier
             '''
         if not attribs:
@@ -34,19 +54,20 @@ class DecisionTree():
             self.attrib_dict = {}
         self.attribute_list = attribs
         self.default_value = default_v
-        self.depth = depth
+        self.length = length
 
 
     def fit(self, X, y):
         '''X and y are as in sklearn classifier.fit expected arguments
             Creates a decision tree
             '''
+        "*** YOUR CODE HERE AS NEEDED***"
         if not self.attrib_dict:
             if X:
                 self.attrib_dict = [str(y) for y in range(len(X[0]))]
         if not self.attribute_list:
             self.attribute_list = self.attrib_dict;
-        self.clf = self.makeTree(X, y, self.attribute_list, self.attrib_dict, self.default_value)
+        self.clf = self.makeTree(X, y, self.attribute_list, self.attrib_dict, self.default_value,0)
         #printTree(self.clf)
         #return self.clf
 
@@ -132,20 +153,23 @@ class DecisionTree():
     ### attrib_dict: {a1: [a1vals], a2: [a2vals],...,ad: [advals]}
     ### the dictionary keys are attribute names and the dictionary values are either the list
     ### of values that attribute takes on or 'real' for real-valued attributes (handle for Extra Credit)
-    def makeTree(self, dataset, labels, attributes, attrib_dict, defaultValue , depth = 0):
+    def makeTree(self, dataset, labels, attributes, attrib_dict, defaultValue , length):
         ''' Helper recursive function for creating a tree
             '''
         if not self.attribute_list :
             self.attribute_list = attributes;
         if not dataset :
+
             return TreeNode(None , defaultValue , 0)
         if not attributes:
             return TreeNode(None , self.majority(labels) , len(dataset));
         if self.sameClass(labels):
-
             return TreeNode(None, labels[0] , len(dataset));
-        else:
+        #if length>= self.length:
 
+        #   return TreeNode(None, self.majority(labels), len(dataset))
+
+        else:
             attrib = self.selectAttribute(dataset , labels);
             attribValues = attrib_dict.get(self.attribute_list[attrib]);
             newAttrib = [];
@@ -153,19 +177,19 @@ class DecisionTree():
                 if y!= self.attribute_list[attrib]:
                     newAttrib.append(y);
             head = TreeNode(self.attribute_list[attrib] , None , len(dataset))
-            if depth>= self.depth:
-                return head
+            if attribValues == 'numeric':
+                attribValues = range(0,50000)
+
             for x in attribValues:
                 tempData = [];
                 tempLabel = [];
                 for i in range(len(dataset)):
+
                     if dataset[i][attrib] == x:
                         tempData.append(dataset[i]);
                         tempLabel.append(labels[i]);
-                head.children.update({x:self.makeTree(tempData , tempLabel ,newAttrib, attrib_dict , defaultValue , depth = depth+1)});
 
-
-
+                head.children.update({x:self.makeTree(tempData , tempLabel ,newAttrib, attrib_dict , defaultValue,length+1)});
             return head
 
 
@@ -265,11 +289,51 @@ def printTree(root, val='Tree', indentNum=0):
         print indent+"}"
 
 
+
 if __name__ == '__main__':
+    #parse the command line arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("train_file", help="Name of file with training data", type=str)
+    parser.add_argument("--y_col", help="name of column containing target", type=str)
+    parser.add_argument("--ibm", help="Flag to indicate that input is IBM data, else plain CSV", action="store_true")
+    args = parser.parse_args()
+
+    #for you to add is logic for handling the --y_col flag if given (for tennis, for example)
+    if args.ibm:
+        data = joblib.load(args.train_file)
+    else:
+        data = mlUtil.extract_data(args.train_file , targetInfo=args.y_col)
+    data = mlUtil.enhance_data(data)
+
 
     #will need some args in constructor
     tree = DecisionTree(attrib_d = data['feature_dict'],attribs=data['feature_names'] , default_v = zeroR(data))
-    tree.fit(data['data'], data['target'])
+    tree.fit(data['data'][:-20], data['target'][:-20])
     #test on training data
-    tt =tree.predict(data['data'])
+    tt =tree.predict(data['data'][-20:])
+    #print tt
 
+
+
+
+
+def read_csv(file , label = 0):
+    csv_reader = csv.reader(file)
+    header = []
+    data = []
+    labels =[]
+    attribs = []
+    for row in csv_reader:
+        if not header :
+            header.extend(row)
+            attribs.extend(row[:label])
+            if label+1 < len(row):
+                attribs.extend(row[label+1:])
+        else :
+            temp_row = []
+            temp_row.extend(row[:label])
+            if label+1 < len(row):
+                temp_row.extend(row[label+1:])
+            data.append(temp_row)
+            labels.append(row[label])
+    return header,attribs , data, labels
