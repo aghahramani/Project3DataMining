@@ -82,7 +82,7 @@ def cleanWords(data) :
 
     return data
 
-### FOR WORDS ONLY
+### FOR WORDS/USERS ONLY
 ### Returns dictionary of all values for given key.
 def keyWords(key) :
     keyedData = {}
@@ -147,7 +147,12 @@ if __name__ == '__main__':
         data = ProcessData(filename)
         pickleData(filename + ".p", data)
 
-    data = cleanWords(data)
     for part in data :
         print part
+        break
+
+    data = keyWords("\"RESPID\"")
+    for part in data :
+        print part
+        print data[part]
         break
