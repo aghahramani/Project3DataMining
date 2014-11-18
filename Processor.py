@@ -1,4 +1,5 @@
 import sys
+import cPickle as pickle
 
 ### Reads a file and returns the data stored in lists of dictionaries
 def ProcessData(filename) :
@@ -14,7 +15,10 @@ def ProcessData(filename) :
             for i in range(len(dataValues)) :
                 if i >= len(values) :
                     break
-                valueDic[dataValues[i]] = int(values[i].strip())
+                try:
+                    valueDic[dataValues[i]] = int(values[i].strip())
+                except :
+                    valueDic[dataValues[i]] = values[i].strip()
             data.append(valueDic)
 
     return data
@@ -69,6 +73,16 @@ def multiKeysHelper(dataPart, keyedData, oldVal, keys, index) :
             keyedData[newVal] = multiKeysHelper(dataPart, {}, newVal, keys, index)
         return keyedData
 
+### Fills in missing values of words.csv with assumed 0
+def cleanWords(data) :
+    for part in data :
+        for key in part :
+            if len(str(part[key])) == 0 :
+                part[key] = 0
+
+    return data
+
+
 ### Normalizes key mapped data (single key only)
 def normalize(data) :
     for key in data :
@@ -93,25 +107,25 @@ def normalize(data) :
         data[key] = normalizedResults
     return data
 
+### Pickle current data structure for future use
+def pickleData(filename, data) :
+    pickle.dump(data, open(filename, "wb"))
+
+### Unpickle saved data structure
+def unpickleData(filename) :
+    return pickle.load(open(filename, "rb"))
+
 
 if __name__ == '__main__':
     args = sys.argv
     filename = args[1]
-    data = ProcessData(filename)
-    print "Data length:",len(data)
-    artistData = KeyToKey(data, "User")
-    for artist in artistData :
-        print "User:",artist
-        print artistData[artist]
-        print len(artistData)
-        print len(artistData[artist])
-        break
+    try :
+        data = unpickleData(filename + ".p")
+    except :
+        data = ProcessData(filename)
+        pickleData(filename + ".p", data)
 
-    print "Normalizing"
-    artistData = normalize(artistData)
-    for artist in artistData :
-        print "User:",artist
-        print artistData[artist]
-        print len(artistData)
-        print len(artistData[artist])
+    data = cleanWords(data)
+    for part in data :
+        print part
         break
