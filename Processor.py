@@ -82,6 +82,28 @@ def cleanWords(data) :
 
     return data
 
+### FOR WORDS ONLY
+### Returns dictionary of all values for given key.
+def keyWords(key) :
+    keyedData = {}
+    for part in data :
+        value = part[key]
+        if value in keyedData :
+            otherData = {}
+            for otherKey in part :
+                if key != otherKey :
+                    otherData[otherKey] = part[otherKey]
+            currentData = keyedData[value]
+            currentData.append(otherData)
+            keyedData[value] = currentData
+        else :
+            otherData = {}
+            for otherKey in part :
+                if key != otherKey :
+                    otherData[otherKey] = part[otherKey]
+            keyedData[value] = [otherData]
+
+    return keyedData
 
 ### Normalizes key mapped data (single key only)
 def normalize(data) :
