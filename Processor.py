@@ -14,11 +14,12 @@ def ProcessData(filename) :
             for i in range(len(dataValues)) :
                 if i >= len(values) :
                     break
-                valueDic[dataValues[i]] = values[i].strip()
+                valueDic[dataValues[i]] = int(values[i].strip())
             data.append(valueDic)
 
     return data
 
+### FOR TRAIN/TEST ONLY
 ### Returns dictionary of all values for given key1 for each key0.
 ### Default key1 to Rating and duplication allowed to True
 def KeyToKey(data, key0, key1="Rating", dup = True) :
@@ -37,6 +38,7 @@ def KeyToKey(data, key0, key1="Rating", dup = True) :
 
     return keyedData
 
+### FOR TRAIN/TEST ONLY
 ### Returns multi-layered dictionary of Ratings for list of keys
 def RatingByMultiKeys(data, keys) :
     keyedData = {}
@@ -67,15 +69,48 @@ def multiKeysHelper(dataPart, keyedData, oldVal, keys, index) :
             keyedData[newVal] = multiKeysHelper(dataPart, {}, newVal, keys, index)
         return keyedData
 
+### Normalizes key mapped data (single key only)
+def normalize(data) :
+    for key in data :
+        ratings = data[key]
+        a = 0.0
+        b = 1.0
+        A = 100.0
+        B = 0.0
+        for rating in ratings :
+            if rating < A :
+                A = float(rating)
+            if rating > B :
+                B = float(rating)
+
+        normalizedResults = []
+        for rating in ratings :
+            if A == B :
+                normalizedResults.append(1)
+            else :
+                normalizedResult = a + ((rating - A) * (b - a)) / (B - A)
+                normalizedResults.append(normalizedResult)
+        data[key] = normalizedResults
+    return data
+
 
 if __name__ == '__main__':
     args = sys.argv
     filename = args[1]
     data = ProcessData(filename)
     print "Data length:",len(data)
-    artistData = RatingByMultiKeys(data, ["Artist","Track"])
+    artistData = KeyToKey(data, "User")
     for artist in artistData :
-        print "Artist:",artist
+        print "User:",artist
+        print artistData[artist]
+        print len(artistData)
+        print len(artistData[artist])
+        break
+
+    print "Normalizing"
+    artistData = normalize(artistData)
+    for artist in artistData :
+        print "User:",artist
         print artistData[artist]
         print len(artistData)
         print len(artistData[artist])
