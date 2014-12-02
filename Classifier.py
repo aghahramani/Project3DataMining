@@ -97,7 +97,6 @@ if __name__ == '__main__':
     for res_index,res in enumerate(results):
        rmse += ((res - labels[res_index])*(res - labels[res_index]))
     print math.sqrt(rmse/float((len(digits['data'])/10)))
-
     #print [res == labels[res_index]   for res_index,res in enumerate(results)].count(True) / float((len(digits['data'])/10))
 
 
