@@ -66,8 +66,8 @@ class RandomForest():
             #print each_data_range
             each_data = data_for_each[:,each_data_range]
             #clf = DecisionTreeClassifier()
-            clf = DecisionTreeRegressor()
-            #clf = linear_model.LinearRegression()
+            #clf = DecisionTreeRegressor()
+            clf = linear_model.LinearRegression()
             clf.fit(each_data,label_each[:3*len(dlabels)/10])
             self.tree_classifiers.append((each_data_range,clf))
 
@@ -314,12 +314,16 @@ if __name__ == '__main__':
 
     n = len(data)
 
+
+
     kf = cross_validation.KFold(n, n_folds=10, indices=True)
 
     avv_rmse = 0
     for train, test in kf:
-        #rd = RandomForestClassifier(n_estimators=10)
+        #rd = RandomForestClassifier(n_estimators=50)
         rd = RandomForest(100)
+        #rd= DecisionTreeRegressor()
+        #rd = linear_model.LinearRegression()
         train_set=[]
         test_set = []
         labels_t = []
